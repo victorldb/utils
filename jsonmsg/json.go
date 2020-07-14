@@ -1,0 +1,93 @@
+package jsonmsg
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"time"
+)
+
+const (
+	// StatusOK --
+	StatusOK = 200
+	// StatusFailed --
+	StatusFailed = 400
+)
+
+// JSONData --
+type JSONData struct {
+	Status interface{} `json:"status"`
+	Time   string      `json:"time"`
+	Msg    string      `json:"msg"`
+	Data   interface{} `json:"data,omitempty"`
+}
+
+// Marshal --
+func Marshal(status interface{}, msg string, d interface{}) (data []byte) {
+	_, intCheck := status.(int)
+	_, stringCheck := status.(string)
+	if !intCheck && !stringCheck {
+		return []byte(fmt.Sprintf("{\"status\":204,\"time\":\"%s\",\"msg\":\"failed\"}", time.Now().Format("2006-01-02 15:04:05")))
+	}
+	temp := JSONData{
+		Status: status,
+		Time:   time.Now().Format("2006-01-02 15:04:05"),
+		Msg:    msg,
+		Data:   d,
+	}
+	data, err := json.Marshal(temp)
+	if err != nil {
+		log.Println(err)
+		if _, ok := status.(int); ok {
+			return []byte(fmt.Sprintf("{\"status\":204,\"time\":\"%s\",\"msg\":\"failed\"}", time.Now().Format("2006-01-02 15:04:05")))
+		} else {
+			return []byte(fmt.Sprintf("{\"status\":\"204\",\"time\":\"%s\",\"msg\":\"failed\"}", time.Now().Format("2006-01-02 15:04:05")))
+		}
+	}
+	return data
+}
+
+// Unmarshal --
+func Unmarshal(data []byte, d interface{}) (res JSONData, err error) {
+	res = JSONData{
+		Data: d,
+	}
+	err = json.Unmarshal(data, &res)
+	return res, err
+}
+
+// UnmarshalWithInt --
+func UnmarshalWithInt(data []byte, d interface{}) (res JSONData, err error) {
+	var status int
+	res = JSONData{
+		Data: d,
+	}
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return res, err
+	}
+	statusFloat64, ok := res.Status.(float64)
+	if !ok {
+		return res, fmt.Errorf("status not int")
+	}
+	status = int(statusFloat64)
+	res.Status = status
+	return res, err
+}
+
+// UnmarshalWithString --
+func UnmarshalWithString(data []byte, d interface{}) (res JSONData, err error) {
+	res = JSONData{
+		Data: d,
+	}
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return res, err
+	}
+	statusString, ok := res.Status.(string)
+	if !ok {
+		return res, fmt.Errorf("status not string")
+	}
+	res.Status = statusString
+	return res, err
+}
