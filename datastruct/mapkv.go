@@ -1,4 +1,4 @@
-package utils
+package datastruct
 
 // MapKV --
 type MapKV map[string]interface{}

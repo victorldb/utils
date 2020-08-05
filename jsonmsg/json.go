@@ -1,6 +1,7 @@
 package jsonmsg
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,9 +41,8 @@ func Marshal(status interface{}, msg string, d interface{}) (data []byte) {
 		log.Println(err)
 		if _, ok := status.(int); ok {
 			return []byte(fmt.Sprintf("{\"status\":204,\"time\":\"%s\",\"msg\":\"failed\"}", time.Now().Format("2006-01-02 15:04:05")))
-		} else {
-			return []byte(fmt.Sprintf("{\"status\":\"204\",\"time\":\"%s\",\"msg\":\"failed\"}", time.Now().Format("2006-01-02 15:04:05")))
 		}
+		return []byte(fmt.Sprintf("{\"status\":\"204\",\"time\":\"%s\",\"msg\":\"failed\"}", time.Now().Format("2006-01-02 15:04:05")))
 	}
 	return data
 }
@@ -90,4 +90,17 @@ func UnmarshalWithString(data []byte, d interface{}) (res JSONData, err error) {
 	}
 	res.Status = statusString
 	return res, err
+}
+
+// FormatJSON 格式化输出JSON
+func FormatJSON(data []byte, seq string) (res []byte, err error) {
+	if seq == "" {
+		seq = "\t"
+	}
+	var out bytes.Buffer
+	err = json.Indent(&out, data, "", seq)
+	if err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
 }

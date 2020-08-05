@@ -45,6 +45,7 @@ func FileExists(name string) bool {
 	return true
 }
 
+// SearchFile --
 // Search a file in paths.
 // this is often used in search config file in /etc ~/
 func SearchFile(filename string, paths ...string) (fullpath string, err error) {
@@ -57,6 +58,7 @@ func SearchFile(filename string, paths ...string) (fullpath string, err error) {
 	return
 }
 
+// GrepFile --
 // like command grep -E
 // for example: GrepFile(`^hello`, "hello.txt")
 // \n is striped while read
@@ -101,6 +103,7 @@ func GrepFile(patten string, filename string) (lines []string, err error) {
 	return lines, nil
 }
 
+// CopyFile 复制文件
 func CopyFile(src, dst string) (err error) {
 	fsrc, err := os.Open(src)
 	defer fsrc.Close()
@@ -128,6 +131,7 @@ func CopyFile(src, dst string) (err error) {
 	return nil
 }
 
+// MoveFile 移动文件
 func MoveFile(src, dst string, modePerm os.FileMode) (err error) {
 	if FileExists(dst) {
 		err = os.Remove(dst)
@@ -155,14 +159,19 @@ func MoveFile(src, dst string, modePerm os.FileMode) (err error) {
 	return nil
 }
 
+// CleanFile 删除目录中其他文件
 func CleanFile(dir string, unfileName []string) (err error) {
 	var isUnFile bool
-	dir_list, err := ioutil.ReadDir(dir)
+	dirList, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return err
 	}
-	if len(dir_list) > 0 {
-		for _, v := range dir_list {
+	// 避免传入的是空切片
+	if len(unfileName) == 0 {
+		unfileName = make([]string, 0)
+	}
+	if len(dirList) > 0 {
+		for _, v := range dirList {
 			if !v.IsDir() {
 				fName := v.Name()
 				isUnFile = false
