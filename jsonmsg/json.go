@@ -104,3 +104,55 @@ func FormatJSON(data []byte, seq string) (res []byte, err error) {
 	}
 	return out.Bytes(), nil
 }
+
+const (
+	// CodeStatusOK --
+	CodeStatusOK = 1
+	// CodeFail --
+	CodeFail = 1001
+	// CodeError --
+	CodeError = 1002
+	// CodeMiss --
+	CodeMiss = 1003
+	// CodeNotFound --
+	CodeNotFound = 1004
+)
+
+// JSONCodeData 业务固定响应头
+type JSONCodeData struct {
+	// 状态；1 成功
+	Code int `json:"code"`
+	// 描述
+	Message string `json:"message"`
+	// 毫秒时间戳
+	Time int64 `json:"time"`
+	// 内容
+	Data interface{} `json:"data,omitempty"`
+}
+
+// MarshalCodeData --
+func MarshalCodeData(code int, message string, data interface{}) (res []byte) {
+	tms := time.Now().UnixNano() / 1e6
+	temp := JSONCodeData{
+		Code:    code,
+		Time:    tms,
+		Message: message,
+		Data:    data,
+	}
+	var err error
+	res, err = json.Marshal(temp)
+	if err != nil {
+		log.Println(err)
+		return []byte(fmt.Sprintf("{\"code\":1002,\"time\":%d,\"msg\":\"json marshal failed: %s\"}", tms, err.Error()))
+	}
+	return res
+}
+
+// UnmarshalCodeData --
+func UnmarshalCodeData(data []byte, d interface{}) (res JSONCodeData, err error) {
+	res = JSONCodeData{
+		Data: d,
+	}
+	err = json.Unmarshal(data, &res)
+	return res, err
+}
