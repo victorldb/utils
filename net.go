@@ -2,8 +2,11 @@ package utils
 
 import (
 	"net"
+	"net/url"
 	"strings"
 	"time"
+
+	"github.com/victorldb/utils/errorsta"
 )
 
 // TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.
@@ -33,4 +36,18 @@ func CheckTCPAddress(s string) (res string, err error) {
 		return res, err
 	}
 	return s, nil
+}
+
+// RemoveRLQuery --
+func RemoveRLQuery(rawURL string, rmkey []string) (res string, err error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return res, errorsta.LastStackError(err)
+	}
+	query := u.Query()
+	for _, key := range rmkey {
+		query.Del(key)
+	}
+	u.RawQuery = query.Encode()
+	return u.String(), nil
 }
