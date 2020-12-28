@@ -11,8 +11,6 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/influxdata/influxdb v1.8.1
 	github.com/lib/pq v1.7.0
-	github.com/mattn/go-oci8 v0.0.8
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/shirou/gopsutil v2.20.6+incompatible
-	golang.org/x/exp/errors v0.0.0-20200513190911-00229845015e
 )
