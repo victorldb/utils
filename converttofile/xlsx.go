@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/360EntSecGroup-Skylar/excelize/v2"
 )
 
 // ConToXlsx ---
@@ -15,12 +15,14 @@ type ConToXlsx struct {
 	Rows [][]interface{}
 	// SheetName
 	SheetName string
+	// 表头样式
+	HeadStyle string
 }
 
 // ConvertToXlsx --
 func ConvertToXlsx(data ConToXlsx) (xlsxBuff *bytes.Buffer, err error) {
 	xlsxFile := excelize.NewFile()
-	firstSheetName := xlsxFile.GetSheetName(1)
+	firstSheetName := xlsxFile.GetSheetName(0)
 	if firstSheetName == "" {
 		xlsxFile.NewSheet(data.SheetName)
 	} else if data.SheetName != firstSheetName {
@@ -32,7 +34,17 @@ func ConvertToXlsx(data ConToXlsx) (xlsxBuff *bytes.Buffer, err error) {
 		row++
 		colNum = len(data.Header)
 		xlsxFile.SetSheetRow(data.SheetName, fmt.Sprintf("A%d", row), &data.Header)
+		if data.HeadStyle != "" {
+			dataStyle, err := xlsxFile.NewStyle(data.HeadStyle)
+			if err != nil {
+				return nil, err
+			}
+			startCellName, _ := excelize.CoordinatesToCellName(1, 1)
+			endCellName, _ := excelize.CoordinatesToCellName(len(data.Header), 1)
+			xlsxFile.SetCellStyle(data.SheetName, startCellName, endCellName, dataStyle)
+		}
 	}
+
 	for _, v := range data.Rows {
 		row++
 		if len(v) > colNum {
@@ -45,13 +57,22 @@ func ConvertToXlsx(data ConToXlsx) (xlsxBuff *bytes.Buffer, err error) {
 	colNumNames := getAllColNameWithLength(colNum)
 	for _, v := range colNumNames {
 		for i := 1; i <= row; i++ {
-			if length := len(xlsxFile.GetCellValue(data.SheetName, getCellKey(v, i))); length > maxWidth {
-				maxWidth = length
+			if v, err := xlsxFile.GetCellValue(data.SheetName, getCellKey(v, i)); err == nil {
+				if length := len([]rune(v)); length > maxWidth {
+					maxWidth = length
+				}
 			}
 		}
-		xlsxFile.SetColWidth(data.SheetName, v, v, float64(maxWidth+3))
+		xlsxFile.SetColWidth(data.SheetName, v, v, float64(maxWidth)*2.7)
 		maxWidth = 0
 	}
+	dataCellStyle, err := xlsxFile.NewStyle(`{"alignment":{"horizontal":"left","vertical":"center","wrap_text":false}}`)
+	if err != nil {
+		return nil, err
+	}
+	scellName, _ := excelize.CoordinatesToCellName(1, 2)
+	dcellName, _ := excelize.CoordinatesToCellName(len(data.Header), len(data.Rows)+1)
+	xlsxFile.SetCellStyle(data.SheetName, scellName, dcellName, dataCellStyle)
 	return xlsxFile.WriteToBuffer()
 }
 
